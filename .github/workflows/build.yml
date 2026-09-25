@@ -1,0 +1,26 @@
+name: build SASA
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: unzip source if uploaded as zip
+        shell: pwsh
+        run: |
+          if (Test-Path "SASA-source.zip") {
+            Expand-Archive "SASA-source.zip" -DestinationPath "." -Force
+            Get-ChildItem SASA.vcxproj, SASA.sln
+          }
+      - name: build x64 Release
+        run: msbuild SASA.vcxproj /p:Configuration=Release /p:Platform=x64 /m /v:minimal
+      - name: list output
+        run: dir x64\Release
+        shell: cmd
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SASA-x64-Release
+          path: x64/Release/SASA.exe
